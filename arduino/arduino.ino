@@ -1,16 +1,18 @@
 #include <DHT11.h>
 #include <DIYables_LCD_I2C.h>
 
-DHT11 dht11(2);
+DHT11 dht11(2); // init DHT11 Sensor in A2 port
 
 // Define the pins
-int sensorPin = A0;
-int ledPin = 4;
-// int sensor2 = A2;
-// int greenLed = 2;
+int soilSensorPin = A0; // Soil Sensor Pin
+
+// LED Pins
+int redPin = 4; // DRY Soil
+int yellowPin = 5; // Wet Soil
+int greenPin = 6; // Moist Soil
 
 // Variables to store sensor value
-int sensorValue = 0;
+int soilSensorValue = 0;
 // int sen2val = 0;
 DIYables_LCD_I2C lcd(0x27, 16, 2); // I2C address 0x27, 16 columns, 2 rows
 
@@ -19,11 +21,12 @@ void setup() {
   Serial.begin(9600);
 
   // Initialize the LED pin as an output
-  pinMode(ledPin, OUTPUT);
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(yellowPin, OUTPUT);
   
   lcd.init();      // Initialize the LCD
   lcd.backlight(); // Turn on the backlight
-
 }
 
 void loop() {
@@ -49,37 +52,47 @@ void loop() {
       Serial.println(DHT11::getErrorString(result));
   }
 
-  sensorValue = analogRead(sensorPin);
-  // sen2val = analogRead(sensor2);
+  // Print Soil Sensor Values
+  soilSensorValue = analogRead(soilSensorPin);
 
   lcd.print("TMP: ");
   lcd.print(temperature);
   lcd.print(" HDY: ");
   lcd.print(humidity);
 
-  // Print the sensor value to the Serial Monitor
-  // Serial.print("Soil Moisture Value: ");
-  // Serial.println(sensorValue);
-  
-  // Serial.print("air Value: ");
-  // Serial.println(sen2val);
+  Serial.print(",");
 
   lcd.setCursor(0, 1);
   // Check if the soil is dry
-  if (sensorValue > 500) {
-    // Turn the LED on
-    Serial.println(",DRY");
-    lcd.print("DRY SOIL");
-    digitalWrite(ledPin, HIGH);
-    // digitalWrite(greenLed, LOW);
-  } else {
-    lcd.print("WET SOIL");
-    Serial.println(",WET");
-    // Turn the LED off
-    digitalWrite(ledPin, LOW);
-    // digitalWrite(greenLed, HIGH);
+  if (soilSensorValue >= 700) {
+    lcd.print("* DRY SOIL ");
+    Serial.print("dry,");
+    digitalWrite(redPin, HIGH);
+    digitalWrite(greenPin, LOW);
+    digitalWrite(yellowPin, LOW);
+  } else if (soilSensorValue >= 250) {
+    lcd.print("MOIST SOIL ");
+    Serial.print("moist,");
+    digitalWrite(redPin, LOW);
+    digitalWrite(greenPin, HIGH);
+    digitalWrite(yellowPin, LOW);
+  } else if (soilSensorValue < 250){
+    lcd.print("* WET SOIL ");
+    Serial.print("wet,");
+    digitalWrite(redPin, LOW);
+    digitalWrite(greenPin, LOW);
+    digitalWrite(yellowPin, HIGH);
   }
 
+  // calculate percentage of the Soil Sensor Value
+  float value = (((soilSensorValue / 1024.0) * 100) - 100 )* -1;
+  lcd.print(value);
+  if(soilSensorValue > 999) lcd.print("%");
+  if(soilSensorValue <= 999) lcd.print("%");
+  if(soilSensorValue <= 99) lcd.print("%  ");
+  if(soilSensorValue <= 9) lcd.print("%   ");
+  Serial.println(soilSensorValue);
+  
   // Wait for a second before taking another reading
   delay(1000);
 }

@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
-# from ai import get_ai_respond
-# import asyncio
+from ai import get_ai_respond
+import asyncio
 from embd import get_value, get_soil_data
 import threading
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
     serial_thread = threading.Thread(target=get_soil_data, daemon=True)
@@ -37,7 +39,8 @@ def get_Sen():
     return jsonify({
         "tmp": data[0],
         "hmd": data[1],
-        "wet": data[2]
+        "wet": data[2],
+        "wet_val": data[3]
     })
 
 

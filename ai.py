@@ -1,7 +1,6 @@
 import asyncio
 from google import genai
 
-
 async def get_ai_respond(msg):
     client = genai.Client()
 
